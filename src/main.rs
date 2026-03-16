@@ -1,13 +1,17 @@
 mod cells; // Contains conway's game of life next frame gen for 2d vector
 
 use std::io;
-use std::thread;
-use std::time::Duration; // Frame timers
-use crossterm::{execute, cursor::Hide, terminal}; // Handle TUI and cursor hide
+use crossterm::{
+    execute, queue,
+    style::{self, Stylize}, cursor, terminal
+};
+use tokio::time::Duration;
 
-fn main() {
+#[tokio::main]
+async fn main() {
+    let mut stdout = io::stdout();
     // Try to hide cursor
-    execute!(io::stdout(), Hide).expect("Could not hide cursor...");
+    execute!(stdout, cursor::Hide).expect("Could not hide cursor...");
     
     // Get terminal size
     let (x,y) = terminal::size().expect("Terminal size not detected!\n");
@@ -24,18 +28,25 @@ fn main() {
     }
 
     // Multithread loop through frames.
-    let render_thread = thread::spawn(move || {
+    tokio::spawn(async move {
         loop {
-            print!("\x1B[2J");
-            for i in 0..y_usize {
-                let buf = start[i].iter().map(|&v| if v {"█"} else {" "}).collect::<String>();
-                print!("{}\n",buf);
+            // Clear screen before starting print.
+            execute!(stdout, terminal::Clear(terminal::ClearType::All)).expect("Could not clear terminal!");
+
+            // Print by line
+            for i in 0..y {
+                let buf = start[i as usize].iter().map(|&v| if v {"█"} else {" "}).collect::<String>(); // Map true and false to lit up cell and whitespace.
+                queue!(stdout, cursor::MoveTo(0,i), style::PrintStyledContent(buf.blue())).expect("Failed to print!"); // Queue to print.
             }
-            start = cells::calculate_next(start);
-            thread::sleep(Duration::from_millis(100));
+
+            // Start calculating next and wait atleast 70ms
+            start = cells::calculate_next(start.clone());
+            tokio::time::sleep(Duration::from_millis(70)).await;
         }
     });
 
-    // Join thread
-    render_thread.join().expect("Failed to join render thread");
+    // To ensure program doesn't exit before first iteration
+    loop {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
 }
