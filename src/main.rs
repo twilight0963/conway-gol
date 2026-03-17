@@ -7,6 +7,7 @@ use crossterm::{
 };
 use tokio::time::Duration;
 
+
 #[tokio::main]
 async fn main() {
     let mut stdout = io::stdout();
@@ -18,18 +19,18 @@ async fn main() {
     let x_usize = x as usize;
     let y_usize = y as usize;
 
-
     // Fill 2D vector with random boolean values
     let mut start:Vec<Vec<bool>> = vec![vec![false; x_usize];y_usize];
     for i in 0..y_usize {
         for j in 0..x_usize {
-            start[i][j] = rand::random_bool(0.5);
+            start[i][j] = rand::random_bool(0.1);
         }
     }
 
     // Multithread loop through frames.
     tokio::spawn(async move {
         loop {
+            let mut neighbors = cells::get_all_neighbors(&start,x_usize,y_usize);
             // Clear screen before starting print.
             execute!(stdout, terminal::Clear(terminal::ClearType::All)).expect("Could not clear terminal!");
 
@@ -40,8 +41,8 @@ async fn main() {
             }
 
             // Start calculating next and wait atleast 70ms
-            start = cells::calculate_next(start.clone());
-            tokio::time::sleep(Duration::from_millis(70)).await;
+            neighbors = cells::calculate_next(&mut start,neighbors,y_usize,x_usize);
+            tokio::time::sleep(Duration::from_millis(50)).await;
         }
     });
 
