@@ -1,5 +1,7 @@
 use std::cmp;
-// Count how many neighbors a particular cell has
+/// Count how many neighbors a particular cell has
+/// # Returns ->
+/// *i32* Neighbor count for cell (__row__,__col__)
 pub fn get_neighbors(grid:&Vec<Vec<bool>>, row:usize, col:usize, m:usize, n:usize) -> i32 {
     let mut count:i32=0; 
 
@@ -20,6 +22,9 @@ pub fn get_neighbors(grid:&Vec<Vec<bool>>, row:usize, col:usize, m:usize, n:usiz
     count
 }
 
+/// Generate neighbors array for size mxn using grid
+/// # Returns: 
+/// *i32* Array of neighbors of size **m**x**n**
 pub fn get_all_neighbors(grid:&Vec<Vec<bool>>,m:usize,n:usize) -> Vec<Vec<i32>> {
     let mut neighbors = vec![vec![0;m];n];
     for row in 0..n {
@@ -30,8 +35,10 @@ pub fn get_all_neighbors(grid:&Vec<Vec<bool>>,m:usize,n:usize) -> Vec<Vec<i32>> 
     neighbors
 }
 
+// == CELL MODIFICATION BEHAVIOUR ==
+// These functions mutate in place, and return nothing
+/// Mark cell as _born_ and update neighbors
 fn birth_cell(row:usize, col:usize, cur:&mut Vec<Vec<bool>>, neighbors:&mut Vec<Vec<i32>>, m:usize,n:usize) {
-    // Mark cell as born and update neighbors
     for i in usize::saturating_sub(row, 1)..cmp::min(m,usize::saturating_add(row, 2)) {
         for j in usize::saturating_sub(col,1)..cmp::min(n,usize::saturating_add(col,2)) {
             if i==row && j==col {
@@ -43,8 +50,8 @@ fn birth_cell(row:usize, col:usize, cur:&mut Vec<Vec<bool>>, neighbors:&mut Vec<
         }
     }
 }
+/// Mark cell as _dead_ and update neighbors
 fn kill_cell(row:usize, col:usize, cur:&mut Vec<Vec<bool>>, neighbors:&mut Vec<Vec<i32>>, m:usize,n:usize) {
-    // Mark cell as dead and update neighbors
     for i in usize::saturating_sub(row, 1)..cmp::min(m,usize::saturating_add(row, 2)) {
         for j in usize::saturating_sub(col,1)..cmp::min(n,usize::saturating_add(col,2)) {
             if i==row && j==col {
@@ -59,9 +66,14 @@ fn kill_cell(row:usize, col:usize, cur:&mut Vec<Vec<bool>>, neighbors:&mut Vec<V
 
 
 
-// Calculate the next frame using get_neighbors and conway's rules
+/// Calculate the next frame using get_neighbors and conway's rules
+/// # Returns ->
+/// Count of **neighbors** in next iteration
+/// # Mutates -> 
+/// Current _boolean_ representation of frame (_Vec\<Vec\<bool\>\>_) -> **Next Frame**
 pub fn calculate_next(cur:&mut Vec<Vec<bool>>, neighbors:Vec<Vec<i32>>,m:usize,n:usize) -> Vec<Vec<i32>>{
-    let mut new_neighbor = neighbors.clone();
+    let mut new_neighbor = neighbors.clone(); // Neighbors wasn't mutated in place so current cells
+                                              // are not affected by next state
     for row in 0..m {
         for col in 0..n {
             // Apply conway's rules
