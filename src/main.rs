@@ -1,26 +1,12 @@
 mod cells; // Contains conway's game of life next frame gen for 2d vector
 
 use std::io;
+use futures::{StreamExt, select, future::FutureExt};
+use futures_timer::Delay;
 use crossterm::{
-    execute, 
-    style::{self, Stylize}, cursor, terminal,
-    event::{self, Event, KeyCode,KeyEvent,KeyEventKind}
+    cursor, event::{Event, EventStream, KeyCode}, execute, style::{self,Stylize}, terminal::{self, enable_raw_mode}
 };
-use tokio::time::Duration;
-
-pub fn read_char() -> std::io::Result<char> {
-    loop {
-        if let Ok(Event::Key(KeyEvent {
-            code: KeyCode::Char(c),
-            kind: KeyEventKind::Press,
-            modifiers: _,
-            state: _,
-        })) = event::read()
-        {
-            return Ok(c);
-        }
-    }
-}
+use std::{time::Duration};
 
 #[tokio::main]
 async fn main() {
@@ -28,10 +14,15 @@ async fn main() {
     const INIT_POPULATION:f64 = 0.1; // Starting chance of a cell being active.
     let mut stdout = io::stdout();
     // Try to hide cursor
-    if execute!(stdout, cursor::Hide).is_err(){
-        println!("Unable to hide cursor!");
+    if enable_raw_mode().is_err() {
     }
-    
+    if execute!(stdout,terminal::EnterAlternateScreen).is_err() {
+        eprintln!("Unable to enter alternate screen");
+    }
+    if execute!(stdout, cursor::Hide).is_err(){
+        eprintln!("Unable to hide cursor!");
+    }
+
     // Get terminal size
     let (x,y) = terminal::size().expect("Terminal size not detected! Exiting...\n");
     let x_usize = x as usize;
@@ -44,6 +35,9 @@ async fn main() {
             start[i][j] = rand::random_bool(INIT_POPULATION);
         }
     }
+
+    tokio::spawn(async move {
+    });
 
     const FRAMETIME:u64 = 1000/FPS;
     // Multithread loop through frames.
@@ -65,12 +59,27 @@ async fn main() {
 
             // Start calculating next and wait atleast 70ms
             neighbors = cells::calculate_next(&mut start,neighbors,y_usize,x_usize);
-            tokio::time::sleep(Duration::from_millis(FRAMETIME)).await;
+            let mut reader = EventStream::new();
+            let mut delay = Delay::new(Duration::from_millis(FRAMETIME)).fuse();
+            let mut event = reader.next().fuse();
+            select! {
+                _ = delay => { continue; },
+                maybe_event = event => {
+                    match maybe_event {
+                        Some(Ok(event)) => {
+                            if event == Event::Key(KeyCode::Char('q').into()) {
+                                if execute!(stdout,terminal::LeaveAlternateScreen).is_err() {
+                                    eprintln!("Unable to enter alternate screen");
+                                }
+                                break;
+                            }
+                        }
+                        Some(Err(e)) => eprintln!("Error: {e:?}\r"),
+                        None => break,
+                    }
+                }
+            }
         }
-    });
+    }).await.expect("Failed to start frame-generator!");
 
-    // To ensure program doesn't exit before first iteration
-    loop {
-        tokio::time::sleep(Duration::from_secs(1)).await;
-    }
 }

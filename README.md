@@ -15,7 +15,7 @@ Conway's game of life implemented within rust
 game-of-life
 ```
 
-Exit by pressing __Ctrl+C__!
+Exit by pressing `q`!
 
 --- 
 
