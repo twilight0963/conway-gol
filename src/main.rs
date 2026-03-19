@@ -10,7 +10,7 @@ use std::{time::Duration};
 
 #[tokio::main]
 async fn main() {
-    const FPS:u64 = 24; // Frames per second for cell rendering
+    const FPS:u64 = 20; // Frames per second for cell rendering
     const FRAMETIME:u64 = 1000/FPS;
     let init_population:f64;
 
@@ -54,7 +54,7 @@ async fn main() {
 
     // Get terminal size
     let (x,y) = terminal::size().expect("Terminal size not detected! Exiting...\n");
-    let x_usize = x as usize;
+    let x_usize = (x/2) as usize;
     let y_usize = y as usize;
 
     // Fill 2D vector with random boolean values
@@ -73,7 +73,7 @@ async fn main() {
 
             // Print by line
             for i in 0..y {
-                let buf = start[i as usize].iter().map(|&v| if v {"█"} else {" "}).collect::<String>(); // Map true and false to lit up cell and whitespace.
+                let buf = start[i as usize].iter().map(|&v| if v {"██"} else {"  "}).collect::<String>(); // Map true and false to lit up cell and whitespace.
                 if execute!(stdout, cursor::MoveTo(0,i), style::PrintStyledContent(buf.blue())).is_err() {
                     eprintln!("Frame render failed!");
                 }// Queue to print.
