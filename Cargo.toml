@@ -10,3 +10,6 @@ termion = "*"
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 futures-timer = "3.0"
+
+[profile.release]
+debug = true
