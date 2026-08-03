@@ -17,11 +17,11 @@ use std::{
 
 /// Collects all arguments from issued command and processes
 /// and sanitizes
-/// **Input** -> f64 population and u64 FPS in arguments
-///     - Index 1 -> Chance of cell being populated as f64 parseable string
-///     - Index 2 -> Frames per second as u64 parseable string
-/// **Output** -> Sanitized f64 population and u64 FPS
-/// **Defaults** -> Population = 0.1, FPS = 24
+/// - **Input** -> f64 population and u64 FPS in arguments
+///   1. -> Chance of cell being populated as f64 parseable string
+///   2. -> Frames per second as u64 parseable string
+/// - **Output** -> Sanitized f64 population and u64 FPS
+/// - **Defaults** -> Population = 0.1, FPS = 24
 fn collect_args(args: &mut Args) -> (f64, u64) {
     const DEFAULT_POPULATION: f64 = 0.1;
     const DEFAULT_FPS: u64 = 24;
