@@ -1,12 +1,13 @@
 # game-of-life
+
 Conway's game of life implemented within rust
 
 ## To install do:
 
 ```sh
-    git clone https://github.com/twilight0963/conway-gol
-    cd ~/conway-gol
-    cargo install --path .
+git clone https://github.com/twilight0963/conway-gol
+cd ~/conway-gol
+cargo install --path .
 ```
 
 ## Then run:
@@ -35,15 +36,15 @@ game-of-life 0.5 60
 game-of-life 0.1 24
 ```
 
-**Note**: 
+**Note**:
+
 - Value for initial population chance must be between 0 and 1.
-- Value for FPS must be a natural number 
+- Value for FPS must be a natural number
 
 Exit by pressing `q`!
 
 ## Screenshot:
 
---- 
+---
 
 ![Screenshot](./ss.png "Screenshot")
-
