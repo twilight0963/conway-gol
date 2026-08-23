@@ -16,6 +16,12 @@ cargo install --path .
 game-of-life
 ```
 
+### You can open an editor for initial frame by passing the `c` argument
+
+```sh
+game-of-life c
+```
+
 ### You can also specify a chance of a cell initially being populated, and the target FPS:
 
 ```sh
@@ -28,7 +34,7 @@ game-of-life 0.5
 game-of-life 0.5 60
 ```
 
-### Default
+### Default values
 
 ```sh
 # INIT POPULATION CHANCE -> 0.1
@@ -38,13 +44,22 @@ game-of-life 0.1 24
 
 **Note**:
 
-- Value for initial population chance must be between 0 and 1.
+- Value for initial population chance must be between 0 and 1, or `c` to open the editor.
 - Value for FPS must be a natural number
 
-Exit by pressing `q`!
+## Keybinds:
 
-## Screenshot:
+- In Editor:
+   - Arrow keys - Move cursor
+   - Enter - Birth/Kill cell
+   - Spacebar - Begin simulation
+- In simulation:
+   - q - Exit simulation
+
+## Screenshots:
 
 ---
 
-![Screenshot](./ss.png "Screenshot")
+![Screenshot](./Screenshots/General.png "Screenshot")
+
+![Editor ss](./Screenshots/Editor.png "Editor screenshot")
