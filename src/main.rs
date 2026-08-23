@@ -19,7 +19,7 @@ use std::{
 /// Collects all arguments from issued command and processes
 /// and sanitizes
 /// - **Input** -> f64 population and u64 FPS in arguments
-///   1. -> Chance of cell being populated as f64 parseable string
+///   1. -> Chance of cell being populated as f64 parseable string or c or --help or -h
 ///   2. -> Frames per second as u64 parseable string
 /// - **Output** -> Sanitized f64 population and u64 FPS
 /// - **Defaults** -> Population = 0.1, FPS = 24
@@ -42,6 +42,7 @@ fn collect_args(args: &mut Args) -> (f64, u64, bool) {
             }
         } else {
             if population_str == "--help" || population_str == "-h" {
+                // Help function
                 println!("Syntax: game-of-life [population probability|c] [framerate]\n");
                 println!(
                     "providing c flag will run with an editor, allowing creation of first frame.\n\n"
@@ -51,9 +52,11 @@ fn collect_args(args: &mut Args) -> (f64, u64, bool) {
                     "In editor:\n\tArrow keys - Move cursor\n\tReturn - Birth/Kill cell\n\tSpace - Begin simulation"
                 );
                 println!("In simulation:\n\tq - Exit simulation");
+                // Placeholder values to exit immidiately.
                 return (-1 as f64, 0 as u64, false);
             }
             if population_str == "c" {
+                // Editor flag
                 create_flag = true;
             }
             init_population = DEFAULT_POPULATION;

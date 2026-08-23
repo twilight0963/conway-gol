@@ -42,6 +42,18 @@ game-of-life 0.5 60
 game-of-life 0.1 24
 ```
 
+### Help function can be invoked via:
+
+```sh
+game-of-life -h
+```
+
+or
+
+```sh
+game-of-life --help
+```
+
 **Note**:
 
 - Value for initial population chance must be between 0 and 1, or `c` to open the editor.
