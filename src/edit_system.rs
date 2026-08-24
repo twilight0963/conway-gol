@@ -35,13 +35,14 @@ pub async fn edit_frame(
                 .map(|(j, &v)| {
                     if i == cursor_y && j == cursor_x as usize {
                         // Selected cell
-                        if v { "▒▒" } else { "░░" }
+                        // ░	▒	▓
+                        if v { "▒▒" } else { "▓▓" }
                     } else if v {
                         // Populated cell
                         "██"
                     } else {
                         // Dead cell
-                        "  "
+                        "⣏⣹"
                     }
                 })
                 .collect::<String>(); // Map true and false to lit up cell and whitespace.
