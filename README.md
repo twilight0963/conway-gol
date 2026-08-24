@@ -1,8 +1,10 @@
 # game-of-life
 
-Conway's game of life implemented within rust
+Conway's game of life implemented within rust.
 
 ## Installation:
+
+Follow [Rust Installation Guide](https://doc.rust-lang.org/cargo/getting-started/installation.html) then
 
 ```sh
 cargo install --git https://github.com/twilight0963/conway-gol
@@ -38,6 +40,11 @@ game-of-life 0.5
 ```sh
 # To give a 50% chance of cell being alive on initial frame at 60FPS
 game-of-life 0.5 60
+```
+
+```sh
+# To run a user-created game-of-life simulation in 60 FPS do
+game-of-life c 60
 ```
 
 ### Default values
