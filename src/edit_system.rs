@@ -57,6 +57,7 @@ pub async fn edit_frame(
             } // Queue to print.
         }
 
+        // Keybind system
         if let Some(Ok(event)) = reader.next().await {
             match event {
                 Event::Key(key) => match key.code {
@@ -73,15 +74,16 @@ pub async fn edit_frame(
                             cursor_x += 1;
                         }
                     }
+                    // Toggle cell state
                     KeyCode::Enter => {
                         let cursor_y_usize: usize = cursor_y as usize;
                         let cursor_x_usize: usize = cursor_x as usize;
-                        // Toggle cell state
                         start[cursor_y_usize][cursor_x_usize] =
                             !start[cursor_y_usize][cursor_x_usize];
                     }
                     // Space to start playing simulation.
                     KeyCode::Char(' ') => break, // Exit edit mode and start simulation
+                    KeyCode::Char('q') => std::process::exit(0),
                     _ => {}
                 },
                 _ => {}

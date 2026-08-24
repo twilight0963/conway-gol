@@ -53,7 +53,7 @@ fn collect_args(args: &mut Args) -> (f64, u64, bool) {
                 );
                 println!("In simulation:\n\tq - Exit simulation");
                 // Placeholder values to exit immidiately.
-                return (-1 as f64, 0 as u64, false);
+                std::process::exit(0);
             }
             if population_str == "c" {
                 // Editor flag
@@ -95,9 +95,6 @@ async fn main() {
 
     // Use program args for initial population chance, default = 0.1
     (init_population, fps, create_flag) = collect_args(&mut args());
-    if init_population == -1.0 {
-        return;
-    }
     let mut stdout = io::stdout();
     let frametime: u64 = 1000 / fps;
 
