@@ -1,3 +1,4 @@
+use crate::exit_function;
 use crossterm::{
     cursor,
     event::{Event, EventStream, KeyCode},
@@ -83,7 +84,9 @@ pub async fn edit_frame(
                     }
                     // Space to start playing simulation.
                     KeyCode::Char(' ') => break, // Exit edit mode and start simulation
-                    KeyCode::Char('q') => std::process::exit(0),
+                    KeyCode::Char('q') => {
+                        exit_function::trigger_exit(stdout, 0);
+                    }
                     _ => {}
                 },
                 _ => {}

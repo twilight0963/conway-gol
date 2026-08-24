@@ -1,5 +1,6 @@
 mod cells; // Contains conway's game of life next frame gen for 2d vector
 mod edit_system; // Contains initial frame editor given -c flag
+mod exit_function; // Contains a trigger_end function to handle all exit features.
 
 use crossterm::{
     cursor,
@@ -163,10 +164,7 @@ async fn main() {
                      Some(Ok(event)) => {
                         // Exit on pressing q
                         if event == Event::Key(KeyCode::Char(EXIT_CHAR).into()) {
-                           if execute!(stdout,terminal::LeaveAlternateScreen).is_err() {
-                              eprintln!("Unable to enter alternate screen");
-                           }
-                           break;
+                            exit_function::trigger_exit(&mut stdout, 0);
                         }
                      }
                      Some(Err(e)) => eprintln!("Error: {e:?}\r"),
