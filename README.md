@@ -2,7 +2,13 @@
 
 Conway's game of life implemented within rust
 
-## To install do:
+## Installation:
+
+```sh
+cargo install --git https://github.com/twilight0963/conway-gol
+```
+
+or
 
 ```sh
 git clone https://github.com/twilight0963/conway-gol
@@ -62,11 +68,11 @@ game-of-life --help
 ## Keybinds:
 
 - In Editor:
-   - Arrow keys - Move cursor
-   - Enter - Birth/Kill cell
-   - Spacebar - Begin simulation
+  - Arrow keys - Move cursor
+  - Enter - Birth/Kill cell
+  - Spacebar - Begin simulation
 - In simulation:
-   - q - Exit simulation
+  - q - Exit simulation
 
 ## Screenshots:
 
