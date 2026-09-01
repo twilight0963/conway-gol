@@ -36,7 +36,6 @@ pub async fn edit_frame(
                 .map(|(j, &v)| {
                     if i == cursor_y && j == cursor_x as usize {
                         // Selected cell
-                        // ░	▒	▓
                         if v { "▒▒" } else { "▓▓" }
                     } else if v {
                         // Populated cell
