@@ -1,10 +1,5 @@
-use crate::exit_function;
-use crossterm::{
-    cursor,
-    event::{Event, EventStream, KeyCode},
-    execute,
-    style::{self, Stylize},
-};
+use crate::{exit_function, render};
+use crossterm::event::{Event, EventStream, KeyCode};
 use futures::StreamExt;
 use std::io;
 
@@ -26,35 +21,23 @@ pub async fn edit_frame(
     // Start cursor in center
     let mut cursor_x: u16 = x_size / 4;
     let mut cursor_y: u16 = y_size / 2;
+    let mut frame: Vec<u8> = Vec::new();
 
     loop {
-        // Print by line
-        for i in 0..y_size {
-            let buf = start[i as usize]
-                .iter()
-                .enumerate()
-                .map(|(j, &v)| {
-                    if i == cursor_y && j == cursor_x as usize {
-                        // Selected cell
-                        if v { "▒▒" } else { "▓▓" }
-                    } else if v {
-                        // Populated cell
-                        "██"
-                    } else {
-                        // Dead cell
-                        "⣏⣹"
-                    }
-                })
-                .collect::<String>(); // Map true and false to lit up cell and whitespace.
-            if execute!(
-                stdout,
-                cursor::MoveTo(0, i),
-                style::PrintStyledContent(buf.blue())
-            )
-            .is_err()
-            {
-                eprintln!("Frame render failed!");
-            } // Queue to print.
+        let glyph = |i: usize, j: usize, v: bool| {
+            if i == cursor_y as usize && j == cursor_x as usize {
+                // Selected cell
+                if v { "▒▒" } else { "▓▓" }
+            } else if v {
+                // Populated cell
+                "██"
+            } else {
+                // Dead cell
+                "⣏⣹"
+            }
+        };
+        if let Err(e) = render::draw_grid(stdout, &mut frame, start, glyph) {
+            exit_function::trigger_exit(stdout, 1, Some(&format!("Frame render failed: {e}")));
         }
 
         // Keybind system
@@ -84,7 +67,7 @@ pub async fn edit_frame(
                     // Space to start playing simulation.
                     KeyCode::Char(' ') => break, // Exit edit mode and start simulation
                     KeyCode::Char('q') => {
-                        exit_function::trigger_exit(stdout, 0);
+                        exit_function::trigger_exit(stdout, 0, None);
                     }
                     _ => {}
                 },

@@ -1,15 +1,15 @@
 mod cells; // Contains conway's game of life next frame gen for 2d vector
 mod edit_system; // Contains initial frame editor given -c flag
 mod exit_function; // Contains a trigger_end function to handle all exit features.
+mod render; // Contains buffered grid drawing shared by simulation and editor
 
 use crossterm::{
     cursor,
     event::{Event, EventStream, KeyCode},
     execute,
-    style::{self, Stylize},
     terminal::{self, enable_raw_mode},
 };
-use futures::{StreamExt, future::FutureExt};
+use futures::StreamExt;
 use tokio::time;
 use std::{
     env::{Args, args},
@@ -44,15 +44,15 @@ fn collect_args(args: &mut Args) -> (f64, u64, bool) {
         } else {
             if population_str == "--help" || population_str == "-h" {
                 // Help function
-                println!("Syntax: game-of-life [population probability|c] [framerate]\n");
+                println!("Syntax: game-of-life [population probability|c] [framerate]");
                 println!(
-                    "providing c flag will run with an editor, allowing creation of first frame.\n\n"
+                    "providing c flag will run with an editor, allowing creation of first frame.\n"
                 );
                 println!("Keybinds:");
                 println!(
                     "In editor:\n\tArrow keys - Move cursor\n\tReturn - Birth/Kill cell\n\tSpace - Begin simulation"
                 );
-                println!("In simulation:\n\tq - Exit simulation");
+                println!("Global:\n\tq - Quit");
                 // Placeholder values to exit immidiately.
                 std::process::exit(0);
             }
@@ -107,10 +107,14 @@ async fn main() {
 
     // Adjustments for input ignore and clean display.
     enable_raw_mode().expect("Unable to enter raw mode.");
+    // Restore the terminal before any panic message prints, so it stays readable.
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        exit_function::restore_terminal(&mut io::stdout());
+        default_hook(info);
+    }));
     execute!(stdout, terminal::EnterAlternateScreen).expect("Unable to enter alternate screen.");
-    if execute!(stdout, cursor::Hide).is_err() {
-        eprintln!("Unable to hide cursor!");
-    }
+    let _ = execute!(stdout, cursor::Hide); // Cosmetic, safe to ignore
 
     // Get terminal size
     let (x, y) = terminal::size().expect("Terminal size not detected! Exiting...\n");
@@ -136,46 +140,48 @@ async fn main() {
 
     // Multithread loop through frames.
     tokio::spawn(async move {
-        let mut neighbors = cells::get_all_neighbors(&start, x_usize, y_usize);
+        let (mut width, mut height) = (x_usize, y_usize);
+        let mut neighbors = cells::get_all_neighbors(&start, width, height);
+        let mut frame: Vec<u8> = Vec::new();
         loop {
-            // Clear screen before starting print.
-
-            // Print by line
-            for i in 0..y {
-                let buf = start[i as usize]
-                    .iter()
-                    .map(|&v| if v { "██" } else { "  " })
-                    .collect::<String>(); // Map true and false to lit up cell and whitespace.
-                if execute!(
-                    stdout,
-                    cursor::MoveTo(0, i),
-                    style::PrintStyledContent(buf.blue())
-                )
-                .is_err()
-                {
-                    eprintln!("Frame render failed!");
-                } // Queue to print.
+            // Map true and false to lit up cell and whitespace.
+            if let Err(e) =
+                render::draw_grid(&mut stdout, &mut frame, &start, |_, _, v| if v { "██" } else { "  " })
+            {
+                exit_function::trigger_exit(&mut stdout, 1, Some(&format!("Frame render failed: {e}")));
             }
 
             // Start calculating next and wait
-            neighbors = cells::calculate_next(&mut start, neighbors, y_usize, x_usize);
+            neighbors = cells::calculate_next(&mut start, neighbors, height, width);
 
-            // Check for any exit signal while waiting
-            let event = reader.next().fuse();
-            tokio::select! {
-                _ = delay.tick() => { continue; }
-               maybe_event = event => {
-                  match maybe_event {
-                     Some(Ok(event)) => {
-                        // Exit on pressing q
-                        if event == Event::Key(KeyCode::Char(EXIT_CHAR).into()) {
-                            exit_function::trigger_exit(&mut stdout, 0);
+            // Wait for the next tick; input is handled without advancing the frame.
+            loop {
+                tokio::select! {
+                    _ = delay.tick() => break,
+                    maybe_event = reader.next() => match maybe_event {
+                        Some(Ok(Event::Resize(cols, rows))) => {
+                            // Keep overlapping cells, pad new space with dead cells.
+                            width = (cols / 2) as usize;
+                            height = rows as usize;
+                            start.resize(height, vec![false; width]);
+                            for row in start.iter_mut() {
+                                row.resize(width, false);
+                            }
+                            neighbors = cells::get_all_neighbors(&start, width, height);
+                            let _ = execute!(stdout, terminal::Clear(terminal::ClearType::All));
                         }
-                     }
-                     Some(Err(e)) => eprintln!("Error: {e:?}\r"),
-                     None => return,
-                  }
-               }
+                        Some(Ok(event)) => {
+                            // Exit on pressing q
+                            if event == Event::Key(KeyCode::Char(EXIT_CHAR).into()) {
+                                exit_function::trigger_exit(&mut stdout, 0, None);
+                            }
+                        }
+                        Some(Err(e)) => {
+                            exit_function::trigger_exit(&mut stdout, 1, Some(&format!("Input error: {e}")))
+                        }
+                        None => exit_function::trigger_exit(&mut stdout, 0, None),
+                    }
+                }
             }
         }
     })

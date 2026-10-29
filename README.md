@@ -14,7 +14,7 @@ or
 
 ```sh
 git clone https://github.com/twilight0963/conway-gol
-cd ~/conway-gol
+cd conway-gol
 cargo install --path .
 ```
 
@@ -71,6 +71,8 @@ game-of-life --help
 
 - Value for initial population chance must be between 0 and 1, or `c` to open the editor.
 - Value for FPS must be a natural number
+- Resizing terminal (or changing font size) expands the vector, and will increase memory usage.
+- Spawn probabilities only apply at the first frame and not to consequent resize expansions.
 
 ## Keybinds:
 
@@ -78,8 +80,8 @@ game-of-life --help
   - Arrow keys - Move cursor
   - Enter - Birth/Kill cell
   - Spacebar - Begin simulation
-- In simulation:
-  - q - Exit simulation
+- Global:
+  - q - Quit app
 
 ## Screenshots:
 
