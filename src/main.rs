@@ -9,8 +9,8 @@ use crossterm::{
     style::{self, Stylize},
     terminal::{self, enable_raw_mode},
 };
-use futures::{StreamExt, future::FutureExt, select};
-use futures_timer::Delay;
+use futures::{StreamExt, future::FutureExt};
+use tokio::time;
 use std::{
     env::{Args, args},
     io,
@@ -56,11 +56,15 @@ fn collect_args(args: &mut Args) -> (f64, u64, bool) {
                 // Placeholder values to exit immidiately.
                 std::process::exit(0);
             }
+            init_population = DEFAULT_POPULATION;
             if population_str == "c" {
                 // Editor flag
                 create_flag = true;
+            } else {
+            eprintln!(
+                "Argument '{population_str}' could not be parsed, reverting to default population."
+            );
             }
-            init_population = DEFAULT_POPULATION;
         }
     } else {
         init_population = DEFAULT_POPULATION
@@ -97,7 +101,9 @@ async fn main() {
     // Use program args for initial population chance, default = 0.1
     (init_population, fps, create_flag) = collect_args(&mut args());
     let mut stdout = io::stdout();
-    let frametime: u64 = 1000 / fps;
+    let frametime: f64 = 1.0 / fps as f64;
+    let mut delay = time::interval(Duration::from_secs_f64(frametime));
+    delay.set_missed_tick_behavior(time::MissedTickBehavior::Skip);
 
     // Adjustments for input ignore and clean display.
     enable_raw_mode().expect("Unable to enter raw mode.");
@@ -130,8 +136,8 @@ async fn main() {
 
     // Multithread loop through frames.
     tokio::spawn(async move {
+        let mut neighbors = cells::get_all_neighbors(&start, x_usize, y_usize);
         loop {
-            let mut neighbors = cells::get_all_neighbors(&start, x_usize, y_usize);
             // Clear screen before starting print.
 
             // Print by line
@@ -155,10 +161,9 @@ async fn main() {
             neighbors = cells::calculate_next(&mut start, neighbors, y_usize, x_usize);
 
             // Check for any exit signal while waiting
-            let mut delay = Delay::new(Duration::from_millis(frametime)).fuse();
-            let mut event = reader.next().fuse();
-            select! {
-               _ = delay => { continue; },
+            let event = reader.next().fuse();
+            tokio::select! {
+                _ = delay.tick() => { continue; }
                maybe_event = event => {
                   match maybe_event {
                      Some(Ok(event)) => {
@@ -168,7 +173,7 @@ async fn main() {
                         }
                      }
                      Some(Err(e)) => eprintln!("Error: {e:?}\r"),
-                     None => break,
+                     None => return,
                   }
                }
             }

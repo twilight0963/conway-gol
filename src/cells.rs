@@ -1,9 +1,9 @@
 use std::cmp;
 /// Count how many neighbors a particular cell has
 /// # Returns ->
-/// *i32* Neighbor count for cell (__row__,__col__)
-pub fn get_neighbors(grid: &Vec<Vec<bool>>, row: usize, col: usize, m: usize, n: usize) -> i32 {
-   let mut count: i32 = 0;
+/// *u8* Neighbor count for cell (__row__,__col__)
+pub fn get_neighbors(grid: &Vec<Vec<bool>>, row: usize, col: usize, m: usize, n: usize) -> u8 {
+   let mut count: u8 = 0;
    assert!(
       row < n && col < m,
       "Cannot adjust a row that does not exist!"
@@ -28,8 +28,8 @@ pub fn get_neighbors(grid: &Vec<Vec<bool>>, row: usize, col: usize, m: usize, n:
 
 /// Generate neighbors array for size mxn using grid
 /// # Returns:
-/// *i32* Array of neighbors of size **m**x**n**
-pub fn get_all_neighbors(grid: &Vec<Vec<bool>>, m: usize, n: usize) -> Vec<Vec<i32>> {
+/// *u8* Array of neighbors of size **m**x**n**
+pub fn get_all_neighbors(grid: &Vec<Vec<bool>>, m: usize, n: usize) -> Vec<Vec<u8>> {
    let mut neighbors = vec![vec![0; m]; n];
    for row in 0..n {
       for col in 0..m {
@@ -46,7 +46,7 @@ fn birth_cell(
    row: usize,
    col: usize,
    cur: &mut Vec<Vec<bool>>,
-   neighbors: &mut Vec<Vec<i32>>,
+   neighbors: &mut Vec<Vec<u8>>,
    m: usize,
    n: usize,
 ) {
@@ -66,7 +66,7 @@ fn kill_cell(
    row: usize,
    col: usize,
    cur: &mut Vec<Vec<bool>>,
-   neighbors: &mut Vec<Vec<i32>>,
+   neighbors: &mut Vec<Vec<u8>>,
    m: usize,
    n: usize,
 ) {
@@ -89,10 +89,10 @@ fn kill_cell(
 /// Current _boolean_ representation of frame (_Vec\<Vec\<bool\>\>_) -> **Next Frame**
 pub fn calculate_next(
    cur: &mut Vec<Vec<bool>>,
-   neighbors: Vec<Vec<i32>>,
+   neighbors: Vec<Vec<u8>>,
    m: usize,
    n: usize,
-) -> Vec<Vec<i32>> {
+) -> Vec<Vec<u8>> {
    let mut new_neighbor = neighbors.clone(); // Neighbors wasn't mutated in place so current cells
    // are not affected by next state
    for row in 0..m {
